@@ -11,7 +11,8 @@
   <xacro:property name="bodylen_side2" value=".12" />
   <xacro:property name="bodylen_side2_base" value=".06" />
   <xacro:property name="right_wrist_offset_x" value="-0.04" />
-  <link name="custom_vacuum_link">
+  <xacro:property name="left_wrist_offset_x" value="-0.04" />
+  <link name="custom_vacuum_link_right">
     <visual>
       <origin rpy="0 0 1.57" xyz="0 0 -0.07"/>
       <geometry>
@@ -22,12 +23,13 @@
       </material>
     </visual>
     <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder radius="${width}" length="${bodylen}"/>
+        <mesh filename="package://jsk_2014_picking_challenge/config/mesh/long1.stl"/>
       </geometry>
     </collision>
   </link>
-  <link name="custom_vacuum_link_base">
+  <link name="custom_vacuum_link_base_right">
     <visual>
       <geometry>
         <mesh filename="package://jsk_2014_picking_challenge/config/mesh/jigukailong2.dae" scale="0.001 0.001 0.001"/>
@@ -37,79 +39,66 @@
       </material>
     </visual>
     <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder radius="${width_base}" length="${bodylen_base}"/>
+        <mesh filename="package://jsk_2014_picking_challenge/config/mesh/jihukailong1_right.stl"/>
       </geometry>
     </collision>
   </link>
-  <link name="custom_vacuum_link_side">
+
+  <link name="custom_vacuum_link_left">
     <visual>
+      <origin rpy="0 0 1.57" xyz="0 0 -0.07"/>
       <geometry>
-        <cylinder radius="0" length="0"/>
+        <mesh filename="package://jsk_2014_picking_challenge/config/mesh/long1.dae" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="white">
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
     <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder radius="${width}" length="${bodylen_side}"/>
+        <mesh filename="package://jsk_2014_picking_challenge/config/mesh/long1.stl"/>
       </geometry>
     </collision>
   </link>
-  <link name="custom_vacuum_link_side2">
+  <link name="custom_vacuum_link_base_left">
     <visual>
       <geometry>
-        <cylinder radius="0" length="0"/>
+        <mesh filename="package://jsk_2014_picking_challenge/config/mesh/jigukailong2.dae" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="white">
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
     <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder radius="${width}" length="${bodylen_side2}"/>
+        <mesh filename="package://jsk_2014_picking_challenge/config/mesh/jigukailong1_left.stl"/>
       </geometry>
     </collision>
   </link>
-  <link name="custom_vacuum_link_side2_base">
-    <visual>
-      <geometry>
-        <cylinder radius="${width_side2_base}" length="${bodylen_side2_base}"/>
-      </geometry>
-      <material name="white">
-        <color rgba="1 1 1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <geometry>
-        <cylinder radius="0" length="0"/>
-      </geometry>
-    </collision>
-  </link>
+
   <joint name="right_custom_joint" type="fixed">
     <parent link="right_wrist"/>
-    <child link="custom_vacuum_link"/>
+    <child link="custom_vacuum_link_right"/>
     <origin rpy="0 0 0" xyz="${right_wrist_offset_x} 0 0.18" />
   </joint>
   <joint name="right_custom_joint_base" type="fixed">
     <parent link="right_wrist"/>
-    <child link="custom_vacuum_link_base"/>
+    <child link="custom_vacuum_link_base_right"/>
     <origin rpy="0 0 0" xyz="${right_wrist_offset_x} 0 0.11" />
   </joint>
-  <joint name="right_custom_joint_side" type="fixed">
-    <parent link="right_wrist"/>
-    <child link="custom_vacuum_link_side"/>
-    <origin rpy="1.57 0 0" xyz="${right_wrist_offset_x} 0 0.15" />
+
+  <joint name="left_custom_joint" type="fixed">
+    <parent link="left_wrist"/>
+    <child link="custom_vacuum_link_left"/>
+    <origin rpy="0 0 0" xyz="${left_wrist_offset_x} 0 0.18" />
   </joint>
-  <joint name="right_custom_joint_side2" type="fixed">
-    <parent link="right_wrist"/>
-    <child link="custom_vacuum_link_side2"/>
-    <origin rpy="0 0 0" xyz="${right_wrist_offset_x} 0 0.08" />
-  </joint>
-  <joint name="right_custom_joint_side2_base" type="fixed">
-    <parent link="right_wrist"/>
-    <child link="custom_vacuum_link_side2_base"/>
-    <origin rpy="0 0 0" xyz="${right_wrist_offset_x} 0 0.04" />
+  <joint name="left_custom_joint_base" type="fixed">
+    <parent link="left_wrist"/>
+    <child link="custom_vacuum_link_base_left"/>
+    <origin rpy="0 0 0" xyz="${left_wrist_offset_x} 0 0.11" />
   </joint>
 </robot>
