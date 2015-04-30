@@ -29,7 +29,7 @@
 
   ;; stop grasp(cleaner OFF)
   (ros::ros-info (format nil "[releasing_object] cleaner OFF"))
-  (send *ri* :stop-grasp)
+  (send *ri* :stop-grasp l/r)
   (unix::sleep 5)
 
   ;; return to original pose
