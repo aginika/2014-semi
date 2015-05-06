@@ -175,7 +175,7 @@
 
 
     (send *sm* :add-node (actionlib-client-state
-			  :larm-init-pose larm-client :async t :timeout 300 :retry t
+			  :larm-init-pose larm-client :timeout 300 :retry t
 			  :key 'init-pose))
     (send *sm* :add-node (actionlib-client-state
 			  :larm-move-to-target larm-client :async t :timeout 300 :retry t
@@ -241,8 +241,8 @@
     (send *sm* :add-transition :rarm-check-target-list :rarm-init-pose t)
     (send *sm* :add-transition :larm-check-target-list :larm-init-pose t)
 
-    (send *sm* :add-transition :rarm-init-pose :rarm-move-to-target t)
-    (send *sm* :add-transition :larm-init-pose :larm-move-to-target t)
+    (send *sm* :add-transition :rarm-init-pose :rarm-move-to-target :succeeded)
+    (send *sm* :add-transition :larm-init-pose :larm-move-to-target :succeeded)
 
     (send *sm* :add-transition :rarm-pick-object-from-multi :rarm-pick-object-from-multi nil)
     (send *sm* :add-transition :larm-pick-object-from-multi :larm-pick-object-from-multi nil)
