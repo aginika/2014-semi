@@ -118,7 +118,6 @@
     (setq *sm*
 	  (make-state-machine
 	   '((:apc-setup -> (:rarm-check-target-list :larm-check-target-list))
-	     (:rarm-init-pose -> :rarm-move-to-target )
 	     (:rarm-move-to-target -> :rarm-pick-object-from-multi)
 	     (:rarm-move-for-verification -> :rarm-wait-place-object)
 	     (:rarm-wait-place-object -> :rarm-place-object)
@@ -126,8 +125,7 @@
 	     (:rarm-place-object -> :rarm-check-target-list)
 	     (:rarm-pick-1-object -> :rarm-wait-place-object)
 	     (:rarm-wait-verification -> :rarm-move-for-verification)
-	     
-	     (:larm-init-pose -> :larm-move-to-target )
+
 	     (:larm-move-to-target -> :larm-pick-object-from-multi)
 	     (:larm-move-for-verification -> :larm-wait-place-object)
 	     (:larm-wait-place-object -> :larm-place-object)
@@ -243,6 +241,8 @@
     (send *sm* :add-transition :rarm-check-target-list :rarm-init-pose t)
     (send *sm* :add-transition :larm-check-target-list :larm-init-pose t)
 
+    (send *sm* :add-transition :rarm-init-pose :rarm-move-to-target t)
+    (send *sm* :add-transition :larm-init-pose :larm-move-to-target t)
 
     (send *sm* :add-transition :rarm-pick-object-from-multi :rarm-pick-object-from-multi nil)
     (send *sm* :add-transition :larm-pick-object-from-multi :larm-pick-object-from-multi nil)
@@ -267,6 +267,8 @@
     (send *sm* :add-transition :rarm-move-to-target :rarm-pick-1-object nil)
     (send *sm* :add-transition :larm-move-to-target :larm-pick-1-object nil)
     (ros::ros-info "ADD TRANSITION")
+
+    (send *sm* :arg-keys 'async-clients 'target-object)
     ))
 
   (defun init ()
