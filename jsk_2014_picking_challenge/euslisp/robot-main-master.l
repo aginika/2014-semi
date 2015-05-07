@@ -87,9 +87,6 @@
 	 (setq opposite-arm (if (equal arm :larm) :rarm :larm))
 	 (setq target-list target-list-given)
 	 (warn (format nil "Arm is ~A" arm))
-	 (setq action-client (instance ros::simple-action-client :init
-				(format nil "/picking_server/~A" (symbol-to-str arm)) jsk_2014_picking_challenge::EusCommandAction))
-	 (send action-client :wait-for-server)
 	 )
   (:apc-setup ()
 	      (ros::ros-info "APC-INIT")
@@ -113,12 +110,14 @@
                                "/picking_server/larm" jsk_2014_picking_challenge::EusCommandAction))
 	async-clients)
     
+    (send rarm-client :wait-for-server)
+    (send larm-client :wait-for-server)
+
     (setq *robot-rarm-smach* (instance robot-manip-controller :init :rarm (list "a" "b")))
     (setq *robot-larm-smach* (instance robot-manip-controller :init :larm (list "g" "h")))
     (setq *sm*
 	  (make-state-machine
 	   '((:apc-setup -> (:rarm-check-target-list :larm-check-target-list))
-	     (:rarm-move-to-target -> :rarm-pick-object-from-multi)
 	     (:rarm-move-for-verification -> :rarm-wait-place-object)
 	     (:rarm-wait-place-object -> :rarm-place-object)
 	     (:rarm-return-object -> :rarm-pick-object-from-multi)
@@ -126,7 +125,6 @@
 	     (:rarm-pick-1-object -> :rarm-wait-place-object)
 	     (:rarm-wait-verification -> :rarm-move-for-verification)
 
-	     (:larm-move-to-target -> :larm-pick-object-from-multi)
 	     (:larm-move-for-verification -> :larm-wait-place-object)
 	     (:larm-wait-place-object -> :larm-place-object)
 	     (:larm-return-object -> :larm-pick-object-from-multi)
@@ -149,7 +147,7 @@
 			  :rarm-init-pose rarm-client :timeout 300 :retry t
 			  :key 'init-pose))
     (send *sm* :add-node (actionlib-client-state
-			  :rarm-move-to-target rarm-client :async t :timeout 300 :retry t
+			  :rarm-move-to-target rarm-client :timeout 300 :retry t
 			  :key 'move-to-target))
     (send *sm* :add-node (actionlib-client-state
 			  :rarm-pick-object-from-multi rarm-client :async t :timeout 300 :retry t
@@ -178,7 +176,7 @@
 			  :larm-init-pose larm-client :timeout 300 :retry t
 			  :key 'init-pose))
     (send *sm* :add-node (actionlib-client-state
-			  :larm-move-to-target larm-client :async t :timeout 300 :retry t
+			  :larm-move-to-target larm-client :timeout 300 :retry t
 			  :key 'move-to-target))
     (send *sm* :add-node (actionlib-client-state
 			  :larm-pick-object-from-multi larm-client :async t :timeout 300 :retry t
@@ -266,6 +264,14 @@
     
     (send *sm* :add-transition :rarm-move-to-target :rarm-pick-1-object nil)
     (send *sm* :add-transition :larm-move-to-target :larm-pick-1-object nil)
+
+    (send *sm* :add-transition :rarm-move-to-target :rarm-pick-1-object nil)
+    (send *sm* :add-transition :larm-move-to-target :larm-pick-1-object nil)
+
+    (send *sm* :add-transition :rarm-move-to-target :rarm-pick-object-from-multi :succeeded)
+    (send *sm* :add-transition :larm-move-to-target :larm-pick-object-from-multi :succeeded)
+
+
     (ros::ros-info "ADD TRANSITION")
 
     (send *sm* :arg-keys 'async-clients 'target-object)
