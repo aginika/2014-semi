@@ -46,7 +46,7 @@
 
 (defun  move-to-target(target-object)
   (ros::ros-error "move-to-target ~A" target-object)
-  (create-euscommand-goal "move_to_target" "a")
+  (create-euscommand-goal "move_to_target" target-object)
   )
 
 (defun  pick-1-object(target-object)
@@ -287,7 +287,7 @@
 
     (ros::ros-info "ADD TRANSITION")
 
-    (send *sm* :arg-keys 'async-clients 'target-object 'target-object2)
+    (send *sm* :arg-keys 'async-clients 'target-object 'target-object2 :target-object :goal :cancel)
     ))
 
   (defun init ()
@@ -300,7 +300,7 @@
   (defun demo ()
     (when (or (not (boundp '*sm*)) (not (boundp '*robot-rarm-smach*) ) (not (boundp '*robot-larm-smach*)))
       (init))
-    (exec-smach-with-spin *sm*))
+    (exec-smach-with-spin *sm* (list (cons 'count 0) (cons 'hoge (list 1 2 3)) )))
 
   (warning-message 3 ";; (demo)~%")
 
