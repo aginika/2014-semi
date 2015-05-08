@@ -4,7 +4,16 @@ project(jsk_2014_picking_challenge)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+    std_msgs
+    geometry_msgs
+    message_generation
+    actionlib actionlib_msgs
+    rosserial_arduino
+    rosserial_client
+    dynamic_reconfigure
+    rostest
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -46,25 +55,52 @@ find_package(catkin REQUIRED)
 #   Message2.msg
 # )
 
+add_message_files(
+  FILES
+  WorkOrder.msg
+  WorkOrderArray.msg
+  BinContents.msg
+  BinContentsArray.msg
+  QrStamp.msg
+  QrStampes.msg
+  ObjectRecognition.msg
+  BoolStamped.msg
+  )
+
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  MoveArm.srv
+  QrStampsrv.srv
+  ReleaseItem.srv
+  Cue.srv
+  ObjectMatch.srv
+  ObjectVerification.srv
+  StringEmpty.srv
+)
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+  FILES
+  MoveArm2TargetBin.action
+  ObjectPicking.action
+  EusCommand.action
+)
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+  geometry_msgs
+  actionlib_msgs
+)
+
+## Add dynamic reconfigure api
+generate_dynamic_reconfigure_options(
+  cfg/SIFTMatcher.cfg
+  cfg/ColorCutback.cfg
+  cfg/DilateImage.cfg
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -78,9 +114,26 @@ find_package(catkin REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES jsk_2014_picking_challenge
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS message_runtime rosserial_arduino rosserial_client
 #  DEPENDS system_lib
 )
+
+if(rosserial_generate_ros_lib) # hydro does not have this macro
+rosserial_generate_ros_lib(
+  PACKAGE rosserial_arduino
+  SCRIPT make_libraries.py
+)
+
+rosserial_configure_client(
+  DIRECTORY firmware
+  TOOLCHAIN_FILE ${ROSSERIAL_ARDUINO_TOOLCHAIN}
+)
+
+rosserial_add_client_target(firmware switching_gripper_left ALL)
+rosserial_add_client_target(firmware switching_gripper_left-upload)
+rosserial_add_client_target(firmware switching_gripper_right ALL)
+rosserial_add_client_target(firmware switching_gripper_right-upload)
+endif()
 
 ###########
 ## Build ##
@@ -154,3 +207,4 @@ catkin_package(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+add_rostest(test/test_robot_motion.test)
