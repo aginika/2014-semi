@@ -45,7 +45,8 @@
   )
 
 (defun  move-to-target(target-object)
-  (create-euscommand-goal "move_to_target" target-object)
+  (ros::ros-error "move-to-target ~A" target-object)
+  (create-euscommand-goal "move_to_target" "a")
   )
 
 (defun  pick-1-object(target-object)
@@ -92,14 +93,25 @@
 	      (ros::ros-info "APC-INIT")
 	      t)
   (:check-target-list (&optional userdata)
-		      (ros::ros-info "CHECK-TARGET-LIST")
-		      (if (> (length target-list) 0)
-			  (progn
-			    (setq target-object (pop target-list))
-			    (set-alist :target-object target-object userdata)
-			    t)
-			:end-picking
-			))
+                      (ros::ros-info "CHECK-TARGET-LIST")
+                      (if (> (length target-list) 0)
+                          (progn
+                            (setq target-objectx (pop target-list))
+                            (ros::ros-info "CHECK-TARGET-LIST ~A" target-objectx)
+                            (set-alist :target-object target-objectx userdata)
+                            t)
+                        :end-picking
+                        ))
+  (:check-target-list2 (&optional userdata)
+                      (ros::ros-info "CHECK-TARGET-LIST")
+                      (if (> (length target-list) 0)
+                          (progn
+                            (setq target-objecty (pop target-list))
+                            (ros::ros-info "CHECK-TARGET-LIST ~A" target-objecty)
+                            (set-alist :target-object2 target-objecty userdata)
+                            t)
+                        :end-picking
+                        ))
   )
 
 (defun make-parallel-state-machine ()
@@ -118,23 +130,21 @@
     (setq *sm*
 	  (make-state-machine
 	   '((:apc-setup -> (:rarm-check-target-list :larm-check-target-list))
-	     (:rarm-move-for-verification -> :rarm-wait-place-object)
+	     (:rarm-move-to-verification -> :rarm-wait-place-object)
 	     (:rarm-wait-place-object -> :rarm-place-object)
 	     (:rarm-return-object -> :rarm-pick-object-from-multi)
 	     (:rarm-place-object -> :rarm-check-target-list)
 	     (:rarm-pick-1-object -> :rarm-wait-place-object)
-	     (:rarm-wait-verification -> :rarm-move-for-verification)
 
-	     (:larm-move-for-verification -> :larm-wait-place-object)
+	     (:larm-move-to-verification -> :larm-wait-place-object)
 	     (:larm-wait-place-object -> :larm-place-object)
 	     (:larm-return-object -> :larm-pick-object-from-multi)
 	     (:larm-place-object -> :larm-check-target-list)
 	     (:larm-pick-1-object -> :larm-wait-place-object)
-	     (:larm-wait-verification -> :larm-move-for-verification)
 	     )
 	   '((:apc-setup '(lambda (&optional args) (send *robot-rarm-smach* :apc-setup)))
-	     (:rarm-check-target-list '(lambda (&optional args) (send *robot-rarm-smach* :check-target-list args)))
-	     (:larm-check-target-list '(lambda (&optional args) (send *robot-larm-smach* :check-target-list args)))
+	     (:rarm-check-target-list '(lambda (&optional args)   (ros::ros-error "rarm ~A" args)(send *robot-rarm-smach* :check-target-list args)))
+	     (:larm-check-target-list '(lambda (&optional args)   (ros::ros-error "larm ~A" args)(send *robot-larm-smach* :check-target-list2 args)))
 	     )
 	   '(:apc-setup)
 	   '(:success)
@@ -150,25 +160,25 @@
 			  :rarm-move-to-target rarm-client :timeout 300 :retry t
 			  :key 'move-to-target))
     (send *sm* :add-node (actionlib-client-state
-			  :rarm-pick-object-from-multi rarm-client :async t :timeout 300 :retry t
+			  :rarm-pick-object-from-multi rarm-client :timeout 300 :retry t
 			  :key 'pick-object-from-multi))
     (send *sm* :add-node (actionlib-client-state
-			  :rarm-move-for-verification rarm-client :async t :timeout 300 :retry t
-			  :key 'move-for-verification))
+			  :rarm-move-to-verification rarm-client :timeout 300 :retry t
+			  :key 'move-to-verification))
     (send *sm* :add-node (actionlib-client-state
-			  :rarm-return-object rarm-client :async t :timeout 300 :retry t
+			  :rarm-return-object rarm-client :timeout 300 :retry t
 			  :key 'return-object))
     (send *sm* :add-node (actionlib-client-state
-			  :rarm-place-object rarm-client :async t :timeout 300 :retry t
+			  :rarm-place-object rarm-client :timeout 300 :retry t
 			  :key 'place-object))
     (send *sm* :add-node (actionlib-client-state
-			  :rarm-wait-verification rarm-client :async t :timeout 300 :retry t
+			  :rarm-wait-verification rarm-client :timeout 300 :retry t
 			  :key 'wait-verification))
     (send *sm* :add-node (actionlib-client-state
-			  :rarm-wait-place-object rarm-client :async t :timeout 300 :retry t
+			  :rarm-wait-place-object rarm-client :timeout 300 :retry t
 			  :key 'wait-place-object))
     (send *sm* :add-node (actionlib-client-state
-			  :rarm-pick-1-object rarm-client :async t :timeout 300 :retry t
+			  :rarm-pick-1-object rarm-client :timeout 300 :retry t
 			  :key 'pick-1-object))
 
 
@@ -179,25 +189,25 @@
 			  :larm-move-to-target larm-client :timeout 300 :retry t
 			  :key 'move-to-target))
     (send *sm* :add-node (actionlib-client-state
-			  :larm-pick-object-from-multi larm-client :async t :timeout 300 :retry t
+			  :larm-pick-object-from-multi larm-client :timeout 300 :retry t
 			  :key 'pick-object-from-multi))
     (send *sm* :add-node (actionlib-client-state
-			  :larm-move-for-verification larm-client :async t :timeout 300 :retry t
-			  :key 'move-for-verification))
+			  :larm-move-to-verification larm-client :timeout 300 :retry t
+			  :key 'move-to-verification))
     (send *sm* :add-node (actionlib-client-state
-			  :larm-return-object larm-client :async t :timeout 300 :retry t
+			  :larm-return-object larm-client :timeout 300 :retry t
 			  :key 'return-object))
     (send *sm* :add-node (actionlib-client-state
-			  :larm-place-object larm-client :async t :timeout 300 :retry t
+			  :larm-place-object larm-client :timeout 300 :retry t
 			  :key 'place-object))
     (send *sm* :add-node (actionlib-client-state
-			  :larm-wait-verification larm-client :async t :timeout 300 :retry t
+			  :larm-wait-verification larm-client :timeout 300 :retry t
 			  :key 'wait-verification))
     (send *sm* :add-node (actionlib-client-state
-			  :larm-wait-place-object larm-client :async t :timeout 300 :retry t
+			  :larm-wait-place-object larm-client :timeout 300 :retry t
 			  :key 'wait-place-object))
     (send *sm* :add-node (actionlib-client-state
-			  :larm-pick-1-object larm-client :async t :timeout 300 :retry t
+			  :larm-pick-1-object larm-client :timeout 300 :retry t
 			  :key 'pick-1-object))
 
 
@@ -210,27 +220,27 @@
 
     ;;remap-list series
     (send (send *sm* :node :rarm-check-target-list) :remap-list '((:target-object . target-object)))
-    (send (send *sm* :node :larm-check-target-list) :remap-list '((:target-object . target-object)))
+    (send (send *sm* :node :larm-check-target-list) :remap-list '((:target-object2 . target-object2)))
 
     (send (send *sm* :node :rarm-init-pose) :remap-list '((:goal . target-object)(:async . async-clients)))
     (send (send *sm* :node :rarm-move-to-target) :remap-list '((:goal . target-object)(:async . async-clients)))
     (send (send *sm* :node :rarm-pick-object-from-multi) :remap-list '((:goal . target-object)(:async . async-clients)))
-    (send (send *sm* :node :rarm-move-for-verification) :remap-list '((:goal . target-object)(:async . async-clients)))
+    (send (send *sm* :node :rarm-move-to-verification) :remap-list '((:goal . target-object)(:async . async-clients)))
     (send (send *sm* :node :rarm-return-object) :remap-list '((:goal . target-object)(:async . async-clients)))
     (send (send *sm* :node :rarm-place-object) :remap-list '((:goal . target-object)(:async . async-clients)))
     (send (send *sm* :node :rarm-wait-verification) :remap-list '((:goal . target-object)(:async . async-clients)))
     (send (send *sm* :node :rarm-wait-place-object) :remap-list '((:goal . target-object)(:async . async-clients)))
     (send (send *sm* :node :rarm-pick-1-object) :remap-list '((:goal . target-object)(:async . async-clients)))
 
-    (send (send *sm* :node :larm-init-pose) :remap-list '((:goal . target-object)(:async . async-clients)))
-    (send (send *sm* :node :larm-move-to-target) :remap-list '((:goal . target-object)(:async . async-clients)))
-    (send (send *sm* :node :larm-pick-object-from-multi) :remap-list '((:goal . target-object)(:async . async-clients)))
-    (send (send *sm* :node :larm-move-for-verification) :remap-list '((:goal . target-object)(:async . async-clients)))
-    (send (send *sm* :node :larm-return-object) :remap-list '((:goal . target-object)(:async . async-clients)))
-    (send (send *sm* :node :larm-place-object) :remap-list '((:goal . target-object)(:async . async-clients)))
-    (send (send *sm* :node :larm-wait-verification) :remap-list '((:goal . target-object)(:async . async-clients)))
-    (send (send *sm* :node :larm-wait-place-object) :remap-list '((:goal . target-object)(:async . async-clients)))
-    (send (send *sm* :node :larm-pick-1-object) :remap-list '((:goal . target-object)(:async . async-clients)))
+    (send (send *sm* :node :larm-init-pose) :remap-list '((:goal . target-object2)(:async . async-clients)))
+    (send (send *sm* :node :larm-move-to-target) :remap-list '((:goal . target-object2)(:async . async-clients)))
+    (send (send *sm* :node :larm-pick-object-from-multi) :remap-list '((:goal . target-object2)(:async . async-clients)))
+    (send (send *sm* :node :larm-move-to-verification) :remap-list '((:goal . target-object2)(:async . async-clients)))
+    (send (send *sm* :node :larm-return-object) :remap-list '((:goal . target-object2)(:async . async-clients)))
+    (send (send *sm* :node :larm-place-object) :remap-list '((:goal . target-object2)(:async . async-clients)))
+    (send (send *sm* :node :larm-wait-verification) :remap-list '((:goal . target-object2)(:async . async-clients)))
+    (send (send *sm* :node :larm-wait-place-object) :remap-list '((:goal . target-object2)(:async . async-clients)))
+    (send (send *sm* :node :larm-pick-1-object) :remap-list '((:goal . target-object2)(:async . async-clients)))
     (ros::ros-info "ADD REMAP LIST")
     ;; NODES END ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -245,14 +255,17 @@
     (send *sm* :add-transition :rarm-pick-object-from-multi :rarm-pick-object-from-multi nil)
     (send *sm* :add-transition :larm-pick-object-from-multi :larm-pick-object-from-multi nil)
 
-    (send *sm* :add-transition :rarm-move-for-verification :rarm-return-object nil)
-    (send *sm* :add-transition :larm-move-for-verification :larm-return-object nil)
+    (send *sm* :add-transition :rarm-move-to-verification :rarm-return-object nil)
+    (send *sm* :add-transition :larm-move-to-verification :larm-return-object nil)
 
     (send *sm* :add-transition :rarm-pick-object-from-multi :rarm-wait-verification t)
     (send *sm* :add-transition :larm-pick-object-from-multi :larm-wait-verification t)
 
     (send *sm* :add-transition :rarm-wait-verification :rarm-wait-verification :wait)
     (send *sm* :add-transition :larm-wait-verification :larm-wait-verification :wait)
+
+    (send *sm* :add-transition :rarm-wait-verification :rarm-move-to-verification t)
+    (send *sm* :add-transition :larm-wait-verification :larm-move-to-verification t)
 
     (send *sm* :add-transition :rarm-wait-place-object :rarm-wait-place-object nil)
     (send *sm* :add-transition :larm-wait-place-object :larm-wait-place-object nil)
@@ -274,7 +287,7 @@
 
     (ros::ros-info "ADD TRANSITION")
 
-    (send *sm* :arg-keys 'async-clients 'target-object)
+    (send *sm* :arg-keys 'async-clients 'target-object 'target-object2)
     ))
 
   (defun init ()
