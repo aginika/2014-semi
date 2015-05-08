@@ -36,7 +36,7 @@
       (move-to-target-bin *use-arm* target-bin-symbol)
       (send server :set-succeeded result))
      ((string= command "pick_object")
-      (pick-object *use-arm*)
+      (pick-object *use-arm* target-bin-symbol)
       (send server :set-succeeded result))
      ((string= command "move_to_verification")
       (move-for-verification *use-arm*)

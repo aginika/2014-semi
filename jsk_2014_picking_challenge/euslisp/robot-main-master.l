@@ -125,21 +125,15 @@
     (send rarm-client :wait-for-server)
     (send larm-client :wait-for-server)
 
-    (setq *robot-rarm-smach* (instance robot-manip-controller :init :rarm (list "a" "b")))
-    (setq *robot-larm-smach* (instance robot-manip-controller :init :larm (list "g" "h")))
+    (setq *robot-rarm-smach* (instance robot-manip-controller :init :rarm (list "c" "i")))
+    (setq *robot-larm-smach* (instance robot-manip-controller :init :larm (list "g" "d")))
     (setq *sm*
 	  (make-state-machine
 	   '((:apc-setup -> (:rarm-check-target-list :larm-check-target-list))
-	     (:rarm-move-to-verification -> :rarm-wait-place-object)
-	     (:rarm-wait-place-object -> :rarm-place-object)
 	     (:rarm-return-object -> :rarm-pick-object-from-multi)
-	     (:rarm-place-object -> :rarm-check-target-list)
 	     (:rarm-pick-1-object -> :rarm-wait-place-object)
 
-	     (:larm-move-to-verification -> :larm-wait-place-object)
-	     (:larm-wait-place-object -> :larm-place-object)
 	     (:larm-return-object -> :larm-pick-object-from-multi)
-	     (:larm-place-object -> :larm-check-target-list)
 	     (:larm-pick-1-object -> :larm-wait-place-object)
 	     )
 	   '((:apc-setup '(lambda (&optional args) (send *robot-rarm-smach* :apc-setup)))
@@ -151,8 +145,8 @@
 	   :exec-result :succeeded
 	   )
 	  )
-
-    ;; NODES ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+   ;; NODES ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     (send *sm* :add-node (actionlib-client-state
 			  :rarm-init-pose rarm-client :timeout 300 :retry t
 			  :key 'init-pose))
@@ -258,23 +252,23 @@
     (send *sm* :add-transition :rarm-move-to-verification :rarm-return-object nil)
     (send *sm* :add-transition :larm-move-to-verification :larm-return-object nil)
 
-    (send *sm* :add-transition :rarm-pick-object-from-multi :rarm-wait-verification t)
-    (send *sm* :add-transition :larm-pick-object-from-multi :larm-wait-verification t)
+    (send *sm* :add-transition :rarm-pick-object-from-multi :rarm-wait-verification :succeeded)
+    (send *sm* :add-transition :larm-pick-object-from-multi :larm-wait-verification :succeeded)
 
     (send *sm* :add-transition :rarm-wait-verification :rarm-wait-verification :wait)
     (send *sm* :add-transition :larm-wait-verification :larm-wait-verification :wait)
 
-    (send *sm* :add-transition :rarm-wait-verification :rarm-move-to-verification t)
-    (send *sm* :add-transition :larm-wait-verification :larm-move-to-verification t)
+    (send *sm* :add-transition :rarm-wait-verification :rarm-move-to-verification :succeeded)
+    (send *sm* :add-transition :larm-wait-verification :larm-move-to-verification :succeeded)
 
     (send *sm* :add-transition :rarm-wait-place-object :rarm-wait-place-object nil)
     (send *sm* :add-transition :larm-wait-place-object :larm-wait-place-object nil)
-    
+
     (send *sm* :add-transition :rarm-check-target-list :join :end-picking)
     (send *sm* :add-transition :larm-check-target-list :join :end-picking)
 
     (send *sm* :add-transition :join :success t)
-    
+
     (send *sm* :add-transition :rarm-move-to-target :rarm-pick-1-object nil)
     (send *sm* :add-transition :larm-move-to-target :larm-pick-1-object nil)
 
@@ -284,6 +278,14 @@
     (send *sm* :add-transition :rarm-move-to-target :rarm-pick-object-from-multi :succeeded)
     (send *sm* :add-transition :larm-move-to-target :larm-pick-object-from-multi :succeeded)
 
+    (send *sm* :add-transition :rarm-move-to-verification :rarm-wait-place-object :succeeded)
+    (send *sm* :add-transition :larm-move-to-verification :larm-wait-place-object :succeeded)
+
+    (send *sm* :add-transition :rarm-wait-place-object  :rarm-place-object :succeeded)
+    (send *sm* :add-transition :larm-wait-place-object  :larm-place-object :succeeded)
+
+    (send *sm* :add-transition :rarm-place-object :rarm-check-target-list :succeeded)
+    (send *sm* :add-transition :larm-place-object :larm-check-target-list :succeeded)
 
     (ros::ros-info "ADD TRANSITION")
 
