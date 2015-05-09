@@ -21,6 +21,12 @@ $ rosdep install -y -r --from-paths .
 $ sudo apt-get install python-catkin-tools ros-indigo-jsk-tools
 $ catkin build
 $ source devel/setup.bash
+$ cd catkin_ws/semi/src
+$ git clone https://github.com/k-okada/baxter_common.git
+$ cd baxter_common
+$ git checkout fix_simple_urdf_v_1_1_0
+$ cd ..
+$ rm -rf RethinkRobotics/baxter_common
 ```
 
 実機を使うときの環境設定
